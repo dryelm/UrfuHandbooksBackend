@@ -1,7 +1,9 @@
-﻿public class HandbookRecordDto
+﻿using HandbooksBackend.Domain.Models;
+
+public class HandbookRecordDto
 {
-    public long Id { get; set; }
-    public long HandbookId { get; set; }
-    public long HandbookRecordContentId { get; set; }
-    public long? ParentId { get; set; }
+	public long Id { get; set; }
+	public long HandbookId { get; set; }
+	public IEnumerable<HandbookRecordContentDto> Values { get; set; }
+	public long? ParentId { get; set; }
 }
