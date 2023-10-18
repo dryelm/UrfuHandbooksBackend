@@ -17,10 +17,15 @@ public class HandbooksController : ControllerBase
 		this.context = context;
 	}
 
+	private static ColumnInfo[] GetColumnInfos(Handbook handbook, Context context)
+	{
+		return context.ColumnInfos.Where(x => x.HandbookId == handbook.Id).ToArray();
+	}
+
 	[HttpGet]
 	public async Task<ActionResult<IEnumerable<HandbookDto>>> GetHandbooks()
 	{
-		return await context.Handbooks.Select(h => h.ToDto()).ToListAsync();
+		return await context.Handbooks.Select(h => h.ToDto(GetColumnInfos(h, context))).ToListAsync();
 	}
 
 	[HttpGet("{id}")]
@@ -33,7 +38,7 @@ public class HandbooksController : ControllerBase
 			return NotFound();
 		}
 
-		return handbook.ToDto();
+		return handbook.ToDto(GetColumnInfos(handbook, context));
 	}
 
 
@@ -89,28 +94,35 @@ public class HandbooksController : ControllerBase
 	[HttpPost]
 	public async Task<ActionResult<HandbookDto>> PostHandbook(HandbookCreationDto handbookDto)
 	{
-		var columnInfos = handbookDto.ColumnInfos.Select(x => new ColumnInfo
-		{
-			Header = x.Header,
-			ColumnType = context.ColumnTypes.FindAsync(x.ColumnTypeId).GetAwaiter().GetResult(),
-			Index = x.Index,
-			IsRequired = x.IsRequired
-		}).ToArray();
-
-		await context.ColumnInfos.AddRangeAsync(columnInfos);
-
 		var handbook = new Handbook
 		{
 			Header = handbookDto.Header,
 			Description = handbookDto.Description,
 			IsInherited = handbookDto.IsInherited,
-			ColumnInfos = columnInfos
 		};
 
+		var columnInfos = handbookDto.ColumnInfos.Select(async x =>
+		{
+			var columnType = await context.ColumnTypes.FindAsync(x.ColumnTypeId);
+			return new ColumnInfo
+			{
+				Handbook = handbook,
+				Header = x.Header,
+				ColumnType = columnType,
+				Index = x.Index,
+				IsRequired = x.IsRequired
+			};
+		}).ToArray();
+
+		await context.ColumnInfos.AddRangeAsync(columnInfos
+			.Select(x => x.GetAwaiter().GetResult()));
+
 		await context.Handbooks.AddAsync(handbook);
+
 		await context.SaveChangesAsync();
 
-		return CreatedAtAction("GetHandbook", new {id = handbook.Id}, handbook.ToDto());
+		return CreatedAtAction("GetHandbook", new {id = handbook.Id},
+			handbook.ToDto(GetColumnInfos(handbook, context)));
 	}
 
 	[HttpDelete]

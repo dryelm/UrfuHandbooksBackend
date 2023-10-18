@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HandbooksBackend.Domain.Entities;
 
@@ -8,5 +9,5 @@ public class Handbook
 	[Required] public string Header { get; set; }
 	[Required] public string Description { get; set; }
 	[Required] public bool IsInherited { get; set; }
-	[Required] public ICollection<ColumnInfo> ColumnInfos { get; set; }
+	[ForeignKey("HandbookId")] [Required] public ICollection<ColumnInfo> ColumnInfos { get; set; }
 }

@@ -4,7 +4,7 @@ using HandbooksBackend.Domain.Models;
 
 public static class HandbookExtensions
 {
-	public static HandbookDto ToDto(this Handbook handbook)
+	public static HandbookDto ToDto(this Handbook handbook, ColumnInfo[] columnInfos)
 	{
 		return new HandbookDto
 		{
@@ -12,13 +12,7 @@ public static class HandbookExtensions
 			Header = handbook.Header,
 			Description = handbook.Description,
 			IsInherited = handbook.IsInherited,
-			ColumnInfos = handbook.ColumnInfos.Select(x => new ColumnDto()
-			{
-				ColumnTypeId = x.ColumnType.Id,
-				Header = x.Header,
-				Index = x.Index,
-				IsRequired = x.IsRequired
-			}).ToArray()
+			ColumnInfos = columnInfos.Select(c => c.ToDto()).ToArray()
 		};
 	}
 }
